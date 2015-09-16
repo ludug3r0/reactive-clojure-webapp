@@ -38,9 +38,9 @@
                   [re-com/input-text
                    :model input-message
                    :width "100%"
-                   :on-change #(do (re-frame/dispatch [:set-message %])
+                   :on-change #(do (re-frame/dispatch [:set-input-message %])
                                    (re-frame/dispatch [:send-message])
-                                   (re-frame/dispatch [:set-message ""]))]]])))
+                                   (re-frame/dispatch [:set-input-message ""]))]]])))
 
 (defn main-panel []
   [re-com/h-box

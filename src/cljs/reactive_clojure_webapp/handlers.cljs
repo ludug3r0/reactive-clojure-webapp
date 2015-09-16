@@ -8,7 +8,7 @@
    db/default-db))
 
 (re-frame/register-handler
-  :set-message
+  :set-input-message
   (fn [db [_ text]]
     (assoc-in db [:input-message] text)))
 
