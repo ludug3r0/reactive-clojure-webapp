@@ -6,3 +6,10 @@
  :initialize-db
  (fn  [_ _]
    db/default-db))
+
+(re-frame/register-handler
+  :send-message
+  re-frame/debug
+  (fn [db [_ text]]
+    (-> db
+        (update-in [:messages] conj {:nickname "Misterioso" :text text :timestamp 000000000}))))

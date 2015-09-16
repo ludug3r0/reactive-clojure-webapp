@@ -2,11 +2,11 @@
   (:require [re-frame.core :as re-frame]
             [re-com.core :as re-com]
             [goog.string :as gstring]
-            [cljs.core :as c]))
-
+            [cljs.core :as c]
+            [reagent.core :as r]))
 
 (defn user-line [user]
-  [:li (:nickname user)])
+  ^{:key user} [:li (:nickname user)])
 
 (defn user-list-panel []
   (let [users (re-frame/subscribe [:connected-users])]
@@ -14,8 +14,8 @@
       [:ul {:style {:list-style-type "none"}}
        (map user-line @users)])))
 
-(defn message-line [{:keys [timestamp nickname text]}]
-  [:p (gstring/format "[%s] <%s> %s" timestamp nickname text)])
+(defn message-line [{:keys [timestamp nickname text] :as message}]
+  ^{:key message} [:p (gstring/format "[%s] <%s> %s" timestamp nickname text)])
 
 (defn message-panel []
   (let [messages (re-frame/subscribe [:messages])]
@@ -36,9 +36,10 @@
               [re-com/input-text
                :model ""
                :width "100%"
-               :on-change #()]]])
+               :on-change #(re-frame/dispatch [:send-message %])]]])
 
 (defn main-panel []
   [re-com/h-box
    :justify :center
    :children [[chat-panel]]])
+
