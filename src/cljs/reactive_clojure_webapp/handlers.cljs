@@ -1,6 +1,7 @@
 (ns reactive-clojure-webapp.handlers
     (:require [re-frame.core :as re-frame]
-              [reactive-clojure-webapp.db :as db]))
+              [reactive-clojure-webapp.db :as db]
+              [reactive-clojure-webapp.server :as server]))
 
 (re-frame/register-handler
  :initialize-db
@@ -14,6 +15,17 @@
 
 (re-frame/register-handler
   :send-message
-  re-frame/debug
   (fn [db _]
-    (update-in db [:messages] conj {:nickname "Misterioso" :text (:input-message db) :timestamp 000000000})))
+    (server/dispatch [:chat/broadcast (:input-message db)])
+    db))
+
+(re-frame/register-handler
+  :chat/message
+  (fn [db [_ {:keys [nickname text timestamp]}]]
+    (update-in db [:messages] conj {:timestamp timestamp :nickname nickname :text text})))
+
+(re-frame/register-handler
+  :init-server
+  (fn [db _]
+    (re-frame/dispatch [:connect-to-server (:nickname db)])
+    db))
