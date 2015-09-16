@@ -3,6 +3,11 @@
     (:require [re-frame.core :as re-frame]))
 
 (re-frame/register-sub
- :name
+ :connected-users
  (fn [db]
-   (reaction (:name @db))))
+   (reaction (:connected-users @db))))
+
+(re-frame/register-sub
+  :messages
+  (fn [db]
+    (reaction (:messages @db))))
