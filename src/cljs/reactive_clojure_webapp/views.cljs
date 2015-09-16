@@ -24,19 +24,23 @@
        :children (map message-line @messages)])))
 
 (defn chat-panel []
-  [re-com/v-box
-   :height "100%"
-   :children [[re-com/gap :size "2em"]
-              [re-com/h-box
-               :height "100%"
-               :width "700px"
-               :children [[message-panel]
-                          [re-com/gap :size "1"]
-                          [user-list-panel]]]
-              [re-com/input-text
-               :model ""
-               :width "100%"
-               :on-change #(re-frame/dispatch [:send-message %])]]])
+  (let [input-message (re-frame/subscribe [:input-message])]
+    (fn []
+      [re-com/v-box
+       :height "100%"
+       :children [[re-com/gap :size "2em"]
+                  [re-com/h-box
+                   :height "100%"
+                   :width "700px"
+                   :children [[message-panel]
+                              [re-com/gap :size "1"]
+                              [user-list-panel]]]
+                  [re-com/input-text
+                   :model input-message
+                   :width "100%"
+                   :on-change #(do (re-frame/dispatch [:set-message %])
+                                   (re-frame/dispatch [:send-message])
+                                   (re-frame/dispatch [:set-message ""]))]]])))
 
 (defn main-panel []
   [re-com/h-box

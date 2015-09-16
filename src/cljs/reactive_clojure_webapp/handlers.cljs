@@ -8,8 +8,12 @@
    db/default-db))
 
 (re-frame/register-handler
+  :set-message
+  (fn [db [_ text]]
+    (assoc-in db [:input-message] text)))
+
+(re-frame/register-handler
   :send-message
   re-frame/debug
-  (fn [db [_ text]]
-    (-> db
-        (update-in [:messages] conj {:nickname "Misterioso" :text text :timestamp 000000000}))))
+  (fn [db _]
+    (update-in db [:messages] conj {:nickname "Misterioso" :text (:input-message db) :timestamp 000000000})))

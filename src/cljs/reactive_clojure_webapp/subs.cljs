@@ -11,3 +11,8 @@
   :messages
   (fn [db]
     (reaction (:messages @db))))
+
+(re-frame/register-sub
+  :input-message
+  (fn [db]
+    (reaction (:input-message @db))))
