@@ -6,7 +6,7 @@
               [reactive-clojure-webapp.views :as views]))
 
 (defn mount-root []
-  (reagent/render [views/main-panel]
+  (reagent/render [views/chat-panel]
                   (.getElementById js/document "app")))
 
 (defn ^:export init [] 
