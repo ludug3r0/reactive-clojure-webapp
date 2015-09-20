@@ -5,14 +5,14 @@
 (re-frame/register-sub
  :connected-users
  (fn [db]
-   (reaction (:connected-users @db))))
+   (reaction (get-in @db [:chat :connected-users]))))
 
 (re-frame/register-sub
   :messages
   (fn [db]
-    (reaction (:messages @db))))
+    (reaction (get-in @db [:chat :messages]))))
 
 (re-frame/register-sub
   :input-message
   (fn [db]
-    (reaction (:input-message @db))))
+    (reaction (get-in @db [:chat :input-message]))))

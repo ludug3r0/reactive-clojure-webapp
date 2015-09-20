@@ -29,12 +29,12 @@
 (defn login! [ring-request]
   (let [{:keys [session params]} ring-request
         {:keys [user-id]} params]
-    (debugf "Login request: %s" params)
+    ;; (debugf "Login request: %s" params)
     {:status 200 :session (assoc session :uid user-id)}))
 
 (defn logout! [ring-request]
   (let [{:keys [session params]} ring-request]
-    (debugf "Logout request: %s" params)
+    ;; (debugf "Logout request: %s" params)
     {:status 200 :session (dissoc session :uid)}))
 
 (defroutes my-app-routes

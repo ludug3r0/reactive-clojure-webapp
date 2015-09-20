@@ -11,21 +11,34 @@
 (re-frame/register-handler
   :set-input-message
   (fn [db [_ text]]
-    (assoc-in db [:input-message] text)))
+    (assoc-in db [:chat :input-message] text)))
 
 (re-frame/register-handler
   :send-message
   (fn [db _]
-    (server/dispatch [:chat/broadcast (:input-message db)])
+    (server/dispatch [:chat/broadcast (get-in db [:chat :input-message] )])
     db))
+
+(re-frame/register-handler
+  :chat/load
+  re-frame/debug
+  (fn [db [_ {:keys [messages]}]]
+    (-> db
+        (assoc-in [:chat :messages] messages))))
 
 (re-frame/register-handler
   :chat/message
   (fn [db [_ {:keys [nickname text timestamp]}]]
-    (update-in db [:messages] conj {:timestamp timestamp :nickname nickname :text text})))
+    (update-in db [:chat :messages] conj {:timestamp timestamp :nickname nickname :text text})))
+
+(re-frame/register-handler
+  :log-into-server
+  (fn [db _]
+    (re-frame/dispatch [:server/log-into-server (get-in db [:chat :nickname])])
+    db))
 
 (re-frame/register-handler
   :init-server
   (fn [db _]
-    (re-frame/dispatch [:connect-to-server (:nickname db)])
+    (re-frame/dispatch [:server/connect-to-server])
     db))

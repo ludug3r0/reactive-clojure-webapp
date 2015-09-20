@@ -4,73 +4,70 @@
   (:require [re-frame.core :as re-frame]
             [cljs.core.async :as async :refer (<! >! put! chan)]
             [taoensso.sente :as sente :refer [cb-success?]]
-            [taoensso.encore :as encore :refer [tracef infof debugf]]))
+            [taoensso.encore :as encore :refer [tracef infof debugf warnf]]))
 
 (re-frame/register-handler
-  :connect-to-server
-  (fn [db [_ username]]
+  :server/connect-to-server
+  (fn [db _]
     (sente/ajax-call
       "/csrf-token"
       {:method :get}
       (fn [ajax-resp]
         (if (= (:?status ajax-resp) 200)
-          (let [{:keys [ch-recv send-fn state chsk]} (sente/make-channel-socket! "/chsk")]
-            (re-frame/register-handler
-              :log-into-server
-              (fn [db [_ user-id]]
-                (sente/ajax-call
-                  "/login"
-                  {:method :post
-                   :params {:user-id    user-id
-                            :csrf-token (:csrf-token @state)}}
-                  (fn [ajax-resp]
-                    (let [login-successful? (= (:?status ajax-resp) 200)]
-                      (if-not login-successful?
-                        (debugf "Login failed")
-                        (do
-                          (debugf "Login successful")
-                          (sente/chsk-reconnect! chsk))))))
-                db))
-            (re-frame/register-handler
-              :logout-from-server
-              (fn [db [_ user-id]]
-                (sente/ajax-call
-                  "/logout"
-                  {:method :post
-                   :params {:csrf-token (:csrf-token @state)}}
-                  (fn [ajax-resp]
-                    (let [logout-successful? (= (:?status ajax-resp) 200)]
-                      (if-not logout-successful?
-                        (debugf "Logout failed")
-                        (do
-                          (debugf "Logout successful")
-                          (sente/chsk-reconnect! chsk))))))
-                db))
-            (re-frame/register-handler
-              :send-event-to-server
-              (fn [db [_ server-v]]
-                (send-fn server-v
-                         1000
-                         (fn [edn-reply]
-                           (when-not (cb-success? edn-reply)
-                             (infof (pr-str edn-reply " - " server-v)))))
-                db))
-
-            (re-frame/dispatch [:log-into-server username])
-
-            (add-watch state :server-state-watcher
-                       (fn [k r o n]
-                         (when (not= o n)
-                           ;;go_client.handlers connection state changed
-                           (re-frame/dispatch [:set-server-state n]))))
-
+          (let [{:keys [ch-recv] :as server} (sente/make-channel-socket! "/chsk")]
             (go-loop [pushed-message (<! ch-recv)]
                      (let [server-v (:event pushed-message)]
                        (if (= :chsk/recv (first server-v))
                          (re-frame/dispatch (second server-v)))
-                       (recur (<! ch-recv))))))))
+                       (recur (<! ch-recv))))
+            (re-frame/dispatch [:server/connected-to-server server])))))
+    db))
 
+(re-frame/register-handler
+  :server/connected-to-server
+  (fn [db [_ server]]
+    (re-frame/dispatch [:log-into-server])
+    (assoc-in db [:server] server)))
+
+(re-frame/register-handler
+  :server/log-into-server
+  (fn [db _]
+    (sente/ajax-call
+      "/login"
+      {:method :post
+       :params {:user-id    (get-in db [:user])
+                :csrf-token (-> db
+                                :server
+                                :state
+                                deref
+                                :csrf-token)}}
+      (fn [ajax-resp]
+        (let [login-successful? (= (:?status ajax-resp) 200)]
+          (if-not login-successful?
+            (warnf "Login failed")
+            (do
+              (sente/chsk-reconnect! (get-in db [:server :chsk]))
+              (re-frame/dispatch [:server/logged-into-server]))))))
+    db))
+
+(re-frame/register-handler
+  :server/send-event-to-server
+  (fn [db [_ server-v]]
+    ((get-in db [:server :send-fn]) server-v
+      1000
+      (fn [edn-reply]
+        (when-not (cb-success? edn-reply)
+          (warnf (pr-str edn-reply " - " server-v))
+          (re-frame/dispatch [:server/send-event-to-server server-v]))))
     db))
 
 (defn dispatch [v]
-  (re-frame/dispatch [:send-event-to-server v]))
+  (re-frame/dispatch [:server/send-event-to-server v]))
+
+(re-frame/register-handler
+  :server/logged-into-server
+  (fn [db _]
+    (dispatch [:chat/load])
+    db))
+
+
