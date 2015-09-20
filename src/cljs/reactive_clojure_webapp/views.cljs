@@ -43,8 +43,15 @@
                                 (re-frame/dispatch [:send-message])
                                 (re-frame/dispatch [:set-input-message ""]))]]])))
 
+(defn loading []
+  [re-com/v-box
+   :children [[re-com/gap :size "2em"]
+              [re-com/label :label "Loading..."]]])
+
 (defn main-panel []
-  [re-com/h-box
-   :justify :center
-   :children [[chat-panel]]])
+  (let [chat-loaded? (re-frame/subscribe [:chat-loaded?])]
+    (fn []
+      [re-com/h-box
+       :justify :center
+       :children [(if @chat-loaded? [chat-panel] [loading])]])))
 

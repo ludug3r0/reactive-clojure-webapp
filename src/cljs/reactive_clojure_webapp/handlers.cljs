@@ -21,10 +21,11 @@
 
 (re-frame/register-handler
   :chat/load
-  re-frame/debug
-  (fn [db [_ {:keys [messages]}]]
+  (fn [db [_ {:keys [messages users]}]]
     (-> db
-        (assoc-in [:chat :messages] messages))))
+        (assoc-in [:chat :loaded?] true)
+        (assoc-in [:chat :messages] messages)
+        (assoc-in [:chat :users] users))))
 
 (re-frame/register-handler
   :chat/message

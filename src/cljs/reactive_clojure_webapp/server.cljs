@@ -6,6 +6,11 @@
             [taoensso.sente :as sente :refer [cb-success?]]
             [taoensso.encore :as encore :refer [tracef infof debugf warnf]]))
 
+(defn logged-into-server? [state]
+  (and (:open? state)
+       (:requested-reconnect? state)
+       (:uid state)))
+
 (re-frame/register-handler
   :server/connect-to-server
   (fn [db _]
@@ -14,19 +19,25 @@
       {:method :get}
       (fn [ajax-resp]
         (if (= (:?status ajax-resp) 200)
-          (let [{:keys [ch-recv] :as server} (sente/make-channel-socket! "/chsk")]
+          (let [{:keys [ch-recv state] :as server} (sente/make-channel-socket! "/chsk")]
+            (re-frame/dispatch [:server/connected-to-server server])
             (go-loop [pushed-message (<! ch-recv)]
                      (let [server-v (:event pushed-message)]
                        (if (= :chsk/recv (first server-v))
                          (re-frame/dispatch (second server-v)))
                        (recur (<! ch-recv))))
-            (re-frame/dispatch [:server/connected-to-server server])))))
+            (add-watch state :server-state-watcher
+                       (fn [k r o n]
+                         (if (logged-into-server? n)
+                           (re-frame/dispatch [:server/logged-into-server]))
+                         ))
+            ))))
     db))
 
 (re-frame/register-handler
   :server/connected-to-server
   (fn [db [_ server]]
-    (re-frame/dispatch [:log-into-server])
+    (re-frame/dispatch [:server/log-into-server])
     (assoc-in db [:server] server)))
 
 (re-frame/register-handler
@@ -46,8 +57,7 @@
           (if-not login-successful?
             (warnf "Login failed")
             (do
-              (sente/chsk-reconnect! (get-in db [:server :chsk]))
-              (re-frame/dispatch [:server/logged-into-server]))))))
+              (sente/chsk-reconnect! (get-in db [:server :chsk])))))))
     db))
 
 (re-frame/register-handler

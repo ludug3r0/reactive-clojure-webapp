@@ -16,3 +16,8 @@
   :input-message
   (fn [db]
     (reaction (get-in @db [:chat :input-message]))))
+
+(re-frame/register-sub
+  :chat-loaded?
+  (fn [db]
+    (reaction (get-in @db [:chat :loaded?]))))
