@@ -1,11 +1,12 @@
 (ns reactive-clojure-webapp.subs
     (:require-macros [reagent.ratom :refer [reaction]])
-    (:require [re-frame.core :as re-frame]))
+    (:require [re-frame.core :as re-frame]
+              [taoensso.encore :as encore :refer [tracef infof debugf warnf]]))
 
 (re-frame/register-sub
  :connected-users
  (fn [db]
-   (reaction (get-in @db [:chat :connected-users]))))
+   (reaction (get-in @db [:chat :users]))))
 
 (re-frame/register-sub
   :messages

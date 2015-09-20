@@ -11,6 +11,6 @@
   {:user (rand-guest)
    :server nil
    :chat {:loaded?         false
-          :connected-users []
+          :users           #{}
           :messages        []
           :input-message   ""}})

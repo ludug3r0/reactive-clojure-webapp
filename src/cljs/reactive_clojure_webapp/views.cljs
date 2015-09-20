@@ -3,10 +3,11 @@
             [re-com.core :as re-com]
             [goog.string :as gstring]
             [cljs.core :as c]
-            [reagent.core :as r]))
+            [reagent.core :as r]
+            [taoensso.encore :as encore :refer [tracef infof debugf warnf]]))
 
 (defn user-line [user]
-  ^{:key user} [:li (:nickname user)])
+  ^{:key user} [:li user])
 
 (defn user-list-panel []
   (let [users (re-frame/subscribe [:connected-users])]
@@ -15,13 +16,13 @@
        (map user-line @users)])))
 
 (defn message-line [{:keys [timestamp nickname text] :as message}]
-  ^{:key message} [:p (gstring/format "[%s] <%s> %s" timestamp nickname text)])
+  ^{:key message} [re-com/label :label (gstring/format "[%s] <%s> %s" timestamp nickname text)])
 
 (defn message-panel []
   (let [messages (re-frame/subscribe [:messages])]
     (fn []
       [re-com/v-box
-       :children (map message-line @messages)])))
+       :children (map message-line (take-last 5 @messages))])))
 
 (defn chat-panel []
   (let [input-message (re-frame/subscribe [:input-message])]

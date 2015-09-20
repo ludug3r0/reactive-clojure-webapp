@@ -16,7 +16,7 @@
 (re-frame/register-handler
   :send-message
   (fn [db _]
-    (server/dispatch [:chat/broadcast (get-in db [:chat :input-message] )])
+    (server/dispatch [:chat/broadcast (get-in db [:chat :input-message])])
     db))
 
 (re-frame/register-handler
@@ -26,6 +26,11 @@
         (assoc-in [:chat :loaded?] true)
         (assoc-in [:chat :messages] messages)
         (assoc-in [:chat :users] users))))
+
+(re-frame/register-handler
+  :chat/user-list-changed
+  (fn [db [_ users]]
+    (assoc-in db [:chat :users] users)))
 
 (re-frame/register-handler
   :chat/message
