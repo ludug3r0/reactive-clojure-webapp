@@ -3,3 +3,4 @@ figwheel_server.log
 reactive_clojure_webapp.iml
 target/
 resources/public/js/compiled/
+.nrepl-history
